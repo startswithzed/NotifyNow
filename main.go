@@ -13,6 +13,9 @@ func main() {
 
   publisher.Publish("Hello World")
 
+  publisher.RemoveSubscriber(1)
+  publisher.Publish("Only channels 2 and 3 should print this")
+
   // this is merely to keep the server running
   http.ListenAndServe(":8080", nil)
 }
