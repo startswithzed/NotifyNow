@@ -1,10 +1,14 @@
 package main
 
+import "context"
+
 // A Subscriber subscribes to a Publisher
 // and listens to the messages sent by it.
 type Subscriber struct {
-  id  uint
-  out chan string
+  id     uint
+  out    chan string
+  ctx    context.Context
+  cancel *context.CancelFunc
 }
 
 // NewSubscriber returns a new Subscriber 
