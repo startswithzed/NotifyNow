@@ -15,7 +15,7 @@ type Publisher struct {
 	subscribers map[uint]*Subscriber
 	sync.RWMutex
 	ctx         context.Context
-	cancel      *context.CancelFunc
+	cancel      context.CancelFunc // its okay to pass functions as values
 }
 
 // NewPublisher returns a new Publisher with zero subscribers.
@@ -23,7 +23,7 @@ type Publisher struct {
 // method before it can start publishing incoming messages.
 func NewPublisher() *Publisher {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Publisher{subscribers: map[uint]*Subscriber{}, ctx: ctx, cancel: &cancel}
+	return &Publisher{subscribers: map[uint]*Subscriber{}, ctx: ctx, cancel: cancel}
 }
 
 // AddSubscriber creates a new Subscriber that starts
@@ -32,7 +32,7 @@ func (p *Publisher) AddSubscriber() {
 	dctx, cancel := context.WithCancel(p.ctx)
 	p.Lock()
 	nextId := p.sequence + 1
-	subscriber := NewSubscriber(nextId, dctx, &cancel)
+	subscriber := NewSubscriber(nextId, dctx, cancel)
 	p.subscribers[nextId] = subscriber
 	p.sequence = p.sequence + 1
 	p.Unlock()
@@ -42,7 +42,7 @@ func (p *Publisher) AddSubscriber() {
 			select {
 			case <-p.ctx.Done():
 				fmt.Printf("parent context cancelled\n")
-				(*subscriber.cancel)()
+				subscriber.cancel()
 				return
 			case <-dctx.Done():
 				fmt.Printf("subscriber %d's context cancelled\n", subscriber.id)
@@ -113,7 +113,7 @@ func (p *Publisher) Start() {
 // Stop prevents the Publisher from listening to any
 // incoming messages by closing the in channel.
 func (p *Publisher) Stop() {
-	(*p.cancel)()
+	p.cancel()
 }
 
 // RemoveSubscriber removes the subscriber specified by the given id.
@@ -128,7 +128,7 @@ func (p *Publisher) RemoveSubscriber(id uint) error {
 		return errors.New("could not find subscriber")
 	}
 
-	(*subscriber.cancel)()
+	subscriber.cancel()
 	delete(p.subscribers, id)
 	close(subscriber.out)
 
