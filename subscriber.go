@@ -14,6 +14,6 @@ type Subscriber struct {
 // NewSubscriber returns a new Subscriber 
 // with the specified id and an out channel 
 // that receives the messages sent to it by its publisher.
-func NewSubscriber(id uint) *Subscriber {
-  return &Subscriber{id: id, out: make(chan string)}
+func NewSubscriber(id uint, ctx context.Context, cancel *context.CancelFunc) *Subscriber {
+  return &Subscriber{id: id, out: make(chan string), ctx: ctx, cancel: cancel}
 }
